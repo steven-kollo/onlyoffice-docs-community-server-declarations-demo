@@ -168,7 +168,44 @@ class Console extends NodeConsole {
  * @property {string} endpoint
  * @property {string} method
  * @property {any} object
+ *  @returns {[Object, boolean]}
  */
+
+function validateC(c) {
+  let invalid = false
+  if (c.isVisible === false) {
+    console.warn("is not visible")
+    invalid = true
+  }
+  const names = ["path", "method", "category", "shortDescription"]
+  const checks = [undefined, null, ""]
+  names.forEach(name => {
+    if (checks.includes(c[name])) {
+      c[name] = ""
+      console.warn(`${name} is missing`)
+      invalid = true
+    }
+  })
+  
+  return [ c, invalid ]
+}
+
+/**
+ * @param {any} c
+ * @param {any} p
+ * @returns {Object}
+ */
+
+function buildObject(c, p) {
+  const object = {}
+  if (c.category != "") {
+    object.tags = [`${p.path}/${c.category}`]
+  }
+  if (c.shortDescription != "") {
+    object.summary = c.shortDescription
+  }
+  return object
+}
 
 /**
  * @param {Console} console
@@ -176,44 +213,17 @@ class Console extends NodeConsole {
  * @param {any} c
  * @returns {Result | null}
  */
+
 function process(console, p, c) {
-  let isInvalid = false
-
-  if (c.path === undefined || c.path === null || c.path === "") {
-    console.warn("path is missing")
-    isInvalid = true
-    c.path = ""
-  }
-
-  if (c.method === undefined || c.method === null || c.method === "") {
-    console.warn("method is missing")
-    isInvalid = true
-    c.method = ""
-  }
+  // DONE
+  let [validated_c, isInvalid] = validateC(c)
+  c = validated_c
 
   const method = c.method.toLowerCase()
   const endpoint = `/api/2.0/${p.path}/${c.path}`
-  const object = {}
+  const object = buildObject(c, p)
 
-  if (c.isVisible === false) {
-    console.warn("is not visible")
-    isInvalid = true
-  }
-
-  if (c.category === undefined || c.category === null || c.category === "") {
-    console.warn("category is missing")
-    isInvalid = true
-  } else {
-    object.tags = [`${p.path}/${c.category}`]
-  }
-
-  if (c.shortDescription === undefined || c.shortDescription === null || c.shortDescription === "") {
-    console.warn("short description is missing")
-    isInvalid = true
-  } else {
-    object.summary = c.shortDescription
-  }
-
+  // TODO...
   const d = processDescription(c)
   if (d !== "") {
     object.description = d
